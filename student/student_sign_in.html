@@ -22,15 +22,15 @@
             <div class="form-group">
                 <label for="name">Name</label>
                 <!-- TODO v-model newStudentName -->
-                <input id="name" class="form-control">
+                <input id="name" class="form-control" v-model.trim="newStudentName">
             </div>
             <div class="form-group">
                 <label for="starID">Star ID</label>
                 <!-- TODO v-model newStarID -->
-                <input id="starID" class="form-control">
+                <input id="starID" class="form-control" v-model.trim="newStarId">
             </div>
             <!-- TODO v-on:click event handler -->
-            <button class="btn btn-primary">Add</button>
+            <button class="btn btn-primary" v-on:click="addStudent">Add</button>
         </div>
 
         <div class="card student-list m-2 p-2">
@@ -47,6 +47,13 @@
                    Each row will have a checkbox, bound to the app's data 
                    When the checkbox is checked/unchecked, the student will be signed in/out -->
 
+                    <tr v-for="student in students">
+                        <td>{{student.name}}</td>
+                        <td>{{student.starID}}</td>
+                        <td></td>
+
+                    </tr>
+
                 </table>
             </div>
         </div>
@@ -55,13 +62,40 @@
         <!-- TODO show a message when student arrives or leaves  -->
 
 
-    </div>
+    </div> <!--end of vue app-->
 
     <script>
 
 
-        // TODO Vue app     
+        // DONE Vue app
+        let app = new Vue({
+            el: '#app',
+            data: {
+                newStudentName: '',
+                newStarId: '',
+                students: [
+                    {name: 'A student', starID: 'aa123aaa', present: false},
+                    {name: 'B Student', starID: 'asd12131', present: false}
+                ]
+            },
+            methods: {
+                addStudent() {
+                    // this.newStudentName = this.newStudentName.trim()
+                    // this.newStarId = this.newStarId.trim()
 
+                    if (this.newStudentName && this.newStarId) {
+                    let student = {
+                        name: this.newStudentName,
+                        starID: this.newStarId,
+                        present: false
+                    }
+                    this.students.push(student)
+                    this.newStudentName = ''
+                    this.newStarId = ''
+                } //end of validation
+                } //end of addStudent()
+            } //end of methods
+        })
 
     </script>
 
