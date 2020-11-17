@@ -13,25 +13,21 @@
 <body>
     <div id="app">
 
-        <!-- TODO display the name of the activity -->
-        <h1 class="text-center">Time Tracker</h1>
+        <h1 class="text-center">{{activity}} Time Tracker</h1>
 
         <div id="add-hours" class="card">
 
             <h2 class="card-header">Add Records</h2>
             <div class="card-body">
                
-                <!-- TODO use v-show to show this if there are validation errors -->
-                <div class="alert alert-danger">
-                    <!-- TODO show a list of validation errors from form -->
+                <div class="alert alert-danger" v-show="errors.length > 0">
+                    <li v-for="error in errors">{{error}}</li>
                 </div>
 
                 <div class="form-group">
-                    <!-- TODO display name of activity in the label -->
-                    <!-- TODO use a filter to display the name of activity in lowercase -->
-                    <label class="form-label" for="date">What date did you <!-- TODO activity name, in lowercase --> </label>
-                    <!-- TODO use v-model to connect this input to dateString data -->
-                    <input id="date" class="form-control" type="date">
+                    <label class="form-label" for="date">What date did you {{activity | lowerCase}}? </label>
+
+                    <input id="date" class="form-control" type="date" v-model="dateString">
                     <small id="date-help" class="form-text text-muted">
                         Date must be today or in the past.
                     </small>
@@ -39,8 +35,7 @@
 
                 <div class="form-group">
                     <label class="form-label" for="hours">How many hours did you practice for?</label>
-                    <!-- TODO use v-model to connect this input to hours data -->
-                    <input id="hours" class="form-control" type="number" min="0" max="24">
+                    <input id="hours" class="form-control" type="number" min="0" max="24" v-model.number="hours">
                     <small id="hours-help" class="form-text text-muted">
                         Enter a number of hours, more than 0, up to a maximum of 24
                     </small>
@@ -48,8 +43,9 @@
 
                 <div class="form-group">
                     <label class="form-label" for="type">What type?</label>
-                    <!-- TODO Create select element, use v-model to connect to the types -->
-                    <!-- TODO Use v-for to create option elements, one for each type -->
+                    <select class="form-control" id="type" v-model="type">
+                       <option v-for="type in types">{{type}}</option>
+                    </select>
                 </div>
 
                 <div class="form-label pb-2">
@@ -57,20 +53,27 @@
                 </div>
 
                 <div class="form-check-inline">
-                    <!-- TODO v-model and v-bind media -->
-                    <input id="media1" class="form-check-input" type="radio">
-                    <label class="form-check-label" for="media1">  <!--TODO Display text -->  </label>
+                    <input id="media1" class="form-check-input" type="radio" v-bind:value="media.traditional" v-model="medium">
+                    <label class="form-check-label" for="media1"> {{media.traditional}}  </label>
                 </div>
 
                 <div class="form-check-inline">
-                    <!-- TODO v-model and v-bind media -->
-                    <input id="media2" class="form-check-input" type="radio">
-                    <label class="form-check-label" for="media2">  <!-- TODO Display text -->  </label>
+                    <input id="media2" class="form-check-input" type="radio" v-bind:value="media.digital" v-model="medium">
+                    <label class="form-check-label" for="media2">  {{media.digital}}  </label>
+                </div>
+
+                <div class="form-group form-check">
+                    <input class="form-check-input" type="checkbox" id="comp" v-model="completed">
+                    <label class="form-check-label" for="comp">Completed?</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="textArea">Notes</label>
+                    <textarea class="form-control" id="textArea" rows="3" v-model="notes"></textarea>
                 </div>
 
                 <div>
-                    <!-- TODO Add v-on:click -->
-                    <button class="btn btn-primary mt-2" type="button">Add record</button>
+                    <button class="btn btn-primary mt-2" type="button" v-on:click="submit">Add record</button>
                 </div>
                 
             </div>
@@ -81,7 +84,7 @@
 
             <div class="card-body">
 
-                <h3> <!-- TODO Display number of records --> records</h3>
+                <h3> {{totalRecords}}</h3>
 
                 <div id="records">
                     <table class="table table-hover">
@@ -90,8 +93,17 @@
                             <th>How many hours?</th>
                             <th>Type</th>
                             <th>Media</th>
+                            <th>Completed?</th>
+                            <th>Notes</th>
                         </tr>
-                        <!-- TODO use v-for to create one table row for each activity record -->
+                        <tr v-for="record in activityRecords">
+                            <td>{{record.date | shortDate}}</td>
+                            <td>{{record.hours | hoursTwoDecimal}}</td>
+                            <td>{{record.type}}</td>
+                            <td>{{record.medium}}</td>
+                            <td>{{record.completed |informativeBool}}</td>
+                            <td>{{record.notes | shortNote}}</td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -103,8 +115,7 @@
 
             <div class="card-body">
 
-                <!-- TODO add computed property to calculate the total hours -->
-                <p>You have practiced a total of <!-- TODO display total hours --> hours</p>
+                <p>You have practiced a total of {{totalHours | hoursTwoDecimal}} hours</p>
 
                 <!-- Challenge question! Display a list of the total hours for each type.  -->
           
@@ -115,7 +126,103 @@
 
     <script>
 
-    //   TODO create new Vue app here
+    let app = new Vue({
+        el: '#app',
+        data: {
+            activity: 'Practice Art',
+            dateString: '',
+            hours: 1,
+            type: 'sketching',
+            medium: '',
+            completed: false,
+            notes: '',
+            activityRecords: [],
+
+            types: ['sketching', 'drawing', 'painting'],
+            media: {
+                traditional: 'Traditional',
+                digital: 'Digital'
+            },
+            errors: []
+        },
+        filters: {
+            lowerCase(text) {
+                return text.toLowerCase()
+            },
+            shortDate(date) {
+                return new Intl.DateTimeFormat('en-US', {timeZone: 'UTC'}).format(date)
+            },
+            shortNote(notes) {
+                return notes.substring(0, 40)
+            },
+            informativeBool(completed) {
+                if (completed) {
+                    return 'completed'
+                } else {
+                    return 'in progress'
+                }
+            },
+            hoursTwoDecimal(totalHours) {
+                return totalHours.toFixed(2)
+            }
+        },
+        computed: {
+            totalRecords() {
+                if (this.activityRecords.length == 1) {
+                    return '1 record'
+                } else {
+                    return this.activityRecords.length + ' records'
+                }
+            },
+            totalHours() {
+                let total = 0
+                this.activityRecords.forEach( record => {
+                    total += record.hours
+                })
+                return total
+            }
+
+        },
+        methods: {
+            submit() {
+                this.errors = []
+
+                let date = new Date(this.dateString)
+
+                if (!this.dateString || this.dateString == 'Invalid Date' || date > new Date()) {
+                    this.errors.push('Select a valid date, today or in the past.')
+                }
+
+                if (this.hours <= 0 || this.hours > 24) {
+                    this.errors.push('The number of hours must be between 0 and 24.')
+                }
+
+                if (!this.type) {
+                    this.errors.push('Select a type.')
+                }
+
+                if (!this.medium) {
+                    this.errors.push('Please select a media type.')
+                }
+
+                if (this.errors.length == 0) {
+                    let record = {
+                        date: date,
+                        hours: this.hours,
+                        type: this.type,
+                        medium: this.medium,
+                        completed: this.completed,
+                        notes: this.notes
+                    }
+                    this.activityRecords.push(record)
+
+                    this.activityRecords.sort(function (r1, r2) {
+                        return r1.date.getTime() - r2.date.getTime()
+                    })
+                }
+            }
+        }
+    })
 
     </script>
 
