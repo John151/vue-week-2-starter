@@ -2,3 +2,13 @@
     max-height: 250px;
     overflow: scroll;
 }
+.sketching {
+    background-color: #f394c5;
+}
+.drawing {
+    background-color: #c68371;
+}
+.painting {
+    background-color: #9696f8;
+}
+
